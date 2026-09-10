@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --ink: #18211d;
+  --muted: #68736d;
+  --paper: #f5f2e9;
+  --card: #fffdf7;
+  --line: #d9d8cb;
+  --accent: #e45f3b;
+  --mint: #b8d8c8;
+  --shadow: 0 22px 70px rgba(27, 48, 38, 0.13);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: 'Space Grotesk', sans-serif;
+  background-image: radial-gradient(circle at 12% 8%, rgba(184, 216, 200, .65), transparent 28%), radial-gradient(circle at 94% 88%, rgba(228, 95, 59, .12), transparent 30%);
+}
+.shell { width: min(100% - 40px, 1050px); margin: 0 auto; padding: 72px 0 90px; }
+.hero { display: grid; grid-template-columns: 1fr 360px; gap: 50px; align-items: end; margin-bottom: 50px; }
+.eyebrow, .kicker, .pipeline { font: 500 12px 'DM Mono', monospace; letter-spacing: .15em; }
+.eyebrow, .kicker { color: var(--accent); margin: 0 0 16px; }
+h1, h2, p { margin-top: 0; }
+h1 { margin-bottom: 22px; font-size: clamp(44px, 7vw, 86px); line-height: .92; letter-spacing: -.07em; font-weight: 700; }
+h1 em { color: var(--accent); font-style: normal; }
+.intro { max-width: 450px; color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0; }
+.pipeline { display: flex; gap: 12px; align-items: center; justify-content: flex-end; color: var(--muted); white-space: nowrap; }
+.pipeline b { color: var(--accent); font: 22px 'Space Grotesk'; }
+.board { background: var(--card); border: 1px solid rgba(24, 33, 29, .08); border-radius: 20px; padding: clamp(24px, 5vw, 52px); box-shadow: var(--shadow); }
+.board-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; border-bottom: 1px solid var(--line); padding-bottom: 24px; }
+.board-head .kicker { margin-bottom: 8px; }
+h2 { margin: 0; font-size: 34px; letter-spacing: -.04em; }
+.counter { color: var(--muted); font: 12px 'DM Mono', monospace; }
+.task-form { display: flex; gap: 12px; margin: 28px 0 10px; }
+input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 10px; padding: 15px 16px; background: #faf9f2; color: var(--ink); font: 15px 'Space Grotesk'; outline: none; }
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(228, 95, 59, .12); }
+button { border: 0; border-radius: 10px; padding: 0 22px; background: var(--ink); color: white; font: 600 14px 'Space Grotesk'; cursor: pointer; transition: transform .2s, background .2s; }
+button:hover { background: var(--accent); transform: translateY(-2px); }
+.notice { min-height: 20px; color: var(--accent); font-size: 13px; margin: 0 0 8px; }
+.task-list { list-style: none; padding: 0; margin: 0; }
+.task { display: flex; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 1px solid var(--line); animation: appear .35s ease both; }
+.task:last-child { border-bottom: 0; }
+.task label { display: flex; align-items: center; flex: 1; gap: 14px; cursor: pointer; }
+.task input { appearance: none; flex: 0 0 auto; width: 20px; height: 20px; padding: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.task input:checked { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 4px var(--card); }
+.task-title { font-size: 16px; line-height: 1.35; }
+.task.done .task-title { color: var(--muted); text-decoration: line-through; }
+.delete { padding: 6px 10px; background: transparent; color: var(--muted); font-size: 18px; }
+.delete:hover { color: var(--accent); background: transparent; transform: none; }
+.empty { color: var(--muted); padding: 25px 0 6px; font-size: 15px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 700px) { .shell { width: min(100% - 28px, 560px); padding-top: 40px; } .hero { display: block; } .pipeline { justify-content: flex-start; margin-top: 28px; font-size: 10px; } .task-form { flex-direction: column; } button { min-height: 48px; } }
