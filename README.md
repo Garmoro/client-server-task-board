@@ -1,5 +1,40 @@
 # Task Board: клиент-серверное приложение
 
+## Текущий этап: полный стек Conversation Summarizer
+
+В репозитории реализована полная связка:
+
+`Next.js -> NestJS -> Prisma/PostgreSQL -> Go summarizer -> Redis + LLM`
+
+- `apps/web` — Next.js-клиент: создание диалога, добавление сообщений, запуск анализа, regenerate и история.
+- `apps/api` — NestJS API/BFF: REST-контроллеры, валидация, Prisma и вызов Go-сервиса.
+- `apps/api/prisma` — Prisma schema и миграция диалогов/сообщений.
+- `conversation-summarizer` — Go-микросервис из приложенного `Задание.md`: LLM, retry, Redis, PostgreSQL, Swagger и метрики.
+- корневой `docker-compose.yml` — полный запуск web, api, summarizer, PostgreSQL, Redis и Ollama.
+
+Запуск всего проекта:
+
+~~~powershell
+Copy-Item apps/api/.env.example apps/api/.env
+Copy-Item apps/web/.env.example apps/web/.env
+docker compose up --build
+~~~
+
+После запуска откройте `http://localhost:3000`. NestJS API доступен на `http://localhost:4000`, его Swagger — на `http://localhost:4000/docs`, Go Swagger — на `http://localhost:8091/swagger/index.html`.
+
+Проверки:
+
+~~~powershell
+npm test
+cd apps/api; npm install; npm test; npm run build
+cd ../web; npm install; npm run build
+cd ../..; cd conversation-summarizer; go test ./...
+~~~
+
+Или из корня: `npm run api:test`, `npm run api:build` и `npm run web:build`. Для запуска полного стека используйте `npm run stack:up`; для Go-тестов в контейнере — `npm run stack:test`.
+
+Подробный разбор нового слоя находится в [conversation-summarizer/LEARNING.md](conversation-summarizer/LEARNING.md).
+
 Учебный проект для задания «подтяни Git, настрой GitHub и пойми механику клиентно-серверных приложений от идеи до запуска».
 
 ## 1. Что мы строим

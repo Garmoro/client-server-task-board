@@ -7,7 +7,15 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "api:install": "npm --prefix apps/api install",
+    "api:test": "npm --prefix apps/api test",
+    "api:build": "npm --prefix apps/api run build",
+    "web:install": "npm --prefix apps/web install",
+    "web:build": "npm --prefix apps/web run build",
+    "stack:up": "docker compose up --build",
+    "stack:down": "docker compose down",
+    "stack:test": "docker compose --profile test run --rm test"
   },
   "engines": {
     "node": ">=20"

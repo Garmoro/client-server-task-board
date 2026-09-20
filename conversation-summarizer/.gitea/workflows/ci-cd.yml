@@ -1,0 +1,81 @@
+name: conversation-summarizer CI/CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: conversation-summarizer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - name: Download dependencies
+        run: go mod download
+      - name: Run tests
+        run: go test ./...
+
+  nest:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+      - name: Test NestJS
+        run: npm test
+      - name: Build NestJS
+        run: npm run build
+
+  next:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Build Next.js
+        run: npm run build
+
+  image:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, nest, next]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build full Docker Compose stack
+        run: docker compose build web api summarizer
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [test, nest, next]
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy with Docker Compose
+        run: |
+          test -n "$DEPLOY_PATH"
+          mkdir -p "$DEPLOY_PATH"
+          cp -R apps conversation-summarizer docker-compose.yml .env.example "$DEPLOY_PATH/"
+          cd "$DEPLOY_PATH"
+          docker compose up -d --build

@@ -1,0 +1,32 @@
+### Health
+GET http://localhost:8091/health
+
+### Create summary
+POST http://localhost:8091/api/v1/summaries
+Content-Type: application/json
+
+{
+  "conversation_id": 789,
+  "messages": [
+    {"id": 1, "sender": "user", "content": "Здравствуйте. Я вчера оплатил подписку.", "created_at": "2026-09-08T12:00:00Z"},
+    {"id": 2, "sender": "user", "content": "Деньги списались, но доступ не появился.", "created_at": "2026-09-08T12:01:00Z"},
+    {"id": 3, "sender": "operator", "content": "Попробуйте выйти из аккаунта и войти снова.", "created_at": "2026-09-08T12:03:00Z"},
+    {"id": 4, "sender": "user", "content": "Попробовал, ничего не изменилось.", "created_at": "2026-09-08T12:05:00Z"}
+  ]
+}
+
+### Latest summary
+GET http://localhost:8091/api/v1/summaries/789
+
+### Summary history
+GET http://localhost:8091/api/v1/summaries/789/history
+
+### Regenerate summary
+POST http://localhost:8091/api/v1/summaries/789/regenerate
+Content-Type: application/json
+
+{
+  "messages": [
+    {"id": 1, "sender": "user", "content": "Оплатил подписку, но доступа нет.", "created_at": "2026-09-08T12:00:00Z"}
+  ]
+}

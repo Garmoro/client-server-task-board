@@ -1,5 +1,10 @@
 node_modules/
+apps/*/node_modules/
+apps/*/.next/
+apps/*/dist/
 data/tasks.json
 .env
+apps/*/.env
+apps/*/.npm-cache/
 .DS_Store
 npm-debug.log*

@@ -1,0 +1,85 @@
+openapi: 3.0.3
+info:
+  title: Conversation Summarizer API
+  version: 1.0.0
+  description: Creates structured support-conversation summaries through an OpenAI-compatible LLM.
+servers:
+  - url: http://localhost:8091
+paths:
+  /health:
+    get:
+      summary: Check PostgreSQL and Redis
+      responses:
+        '200': {description: Dependencies are available}
+        '503': {description: A dependency is unavailable}
+  /api/v1/summaries:
+    post:
+      summary: Create a summary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateSummaryRequest'}
+      responses:
+        '201': {description: Summary created, content: {application/json: {schema: {$ref: '#/components/schemas/Summary'}}}}
+        '400': {description: Invalid request}
+        '502': {description: LLM unavailable or invalid LLM response}
+        '504': {description: LLM timeout}
+  /api/v1/summaries/{conversation_id}:
+    get:
+      summary: Get the latest summary
+      parameters: [{in: path, name: conversation_id, required: true, schema: {type: integer, format: int64}}]
+      responses:
+        '200': {description: Latest summary}
+        '404': {description: Summary not found}
+  /api/v1/summaries/{conversation_id}/history:
+    get:
+      summary: Get all versions
+      parameters: [{in: path, name: conversation_id, required: true, schema: {type: integer, format: int64}}]
+      responses:
+        '200': {description: Summary history}
+  /api/v1/summaries/{conversation_id}/regenerate:
+    post:
+      summary: Force a new version and bypass Redis
+      parameters: [{in: path, name: conversation_id, required: true, schema: {type: integer, format: int64}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateSummaryRequest'}
+      responses:
+        '201': {description: New summary version created}
+components:
+  schemas:
+    Message:
+      type: object
+      required: [id, sender, content, created_at]
+      properties:
+        id: {type: integer, format: int64}
+        sender: {type: string, enum: [user, operator, bot, system]}
+        content: {type: string}
+        created_at: {type: string, format: date-time}
+    CreateSummaryRequest:
+      type: object
+      required: [conversation_id, messages]
+      properties:
+        conversation_id: {type: integer, format: int64}
+        messages: {type: array, items: {$ref: '#/components/schemas/Message'}}
+    Summary:
+      type: object
+      properties:
+        id: {type: integer, format: int64}
+        conversation_id: {type: integer, format: int64}
+        summary: {type: string}
+        problem: {type: string}
+        actions_taken: {type: array, items: {type: string}}
+        status: {type: string, enum: [resolved, unresolved, waiting_user, waiting_operator, unknown]}
+        sentiment: {type: string, enum: [positive, neutral, negative, angry]}
+        priority: {type: string, enum: [low, medium, high, critical]}
+        topics: {type: array, items: {type: string}}
+        model: {type: string}
+        prompt_tokens: {type: integer}
+        completion_tokens: {type: integer}
+        llm_duration_ms: {type: integer}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}

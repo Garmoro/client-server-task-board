@@ -1,0 +1,98 @@
+services:
+  web:
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000
+    ports: ["3000:3000"]
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+
+  api:
+    build: ./apps/api
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/summarizer?schema=public
+      SUMMARIZER_URL: http://summarizer:8091
+      WEB_ORIGIN: http://localhost:3000
+    ports: ["4000:4000"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      postgres: {condition: service_healthy}
+      summarizer: {condition: service_started}
+    restart: unless-stopped
+
+  summarizer:
+    build: ./conversation-summarizer
+    env_file: .env.example
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/summarizer?sslmode=disable
+      MIGRATIONS_DIR: ./migrations
+      LLM_TIMEOUT_SECONDS: "600"
+      LLM_MODEL: qwen2.5:0.5b
+      LLM_MAX_TOKENS: "1500"
+      LLM_MAX_RETRIES: "2"
+    ports: ["8091:8091"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      ollama-model: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: summarizer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d summarizer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_KEEP_ALIVE: 24h
+    volumes: [ollama_data:/root/.ollama]
+    ports: ["11434:11434"]
+
+  ollama-model:
+    image: ollama/ollama:latest
+    depends_on: [ollama]
+    environment: {OLLAMA_HOST: http://ollama:11434}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        until ollama list >/dev/null 2>&1; do sleep 2; done
+        if ollama list | grep -q "qwen2.5:0.5b"; then
+          echo "model already present"
+          exit 0
+        fi
+        until ollama pull qwen2.5:0.5b; do echo "retry pull"; sleep 15; done
+
+  test:
+    build:
+      context: ./conversation-summarizer
+      target: build
+    profiles: ["test"]
+    entrypoint: ["go", "test", "./..."]
+
+volumes:
+  postgres_data:
+  ollama_data:

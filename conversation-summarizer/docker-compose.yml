@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    env_file: .env.example
+    ports: ["8091:8091"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      ollama-model: {condition: service_completed_successfully}
+    restart: unless-stopped
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: summarizer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d summarizer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  ollama:
+    image: ollama/ollama:latest
+    volumes: [ollama_data:/root/.ollama]
+    ports: ["11434:11434"]
+  ollama-model:
+    image: ollama/ollama:latest
+    depends_on: [ollama]
+    environment: {OLLAMA_HOST: http://ollama:11434}
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["until ollama list >/dev/null 2>&1; do sleep 2; done; ollama pull qwen3:4b"]
+  test:
+    build: {context: ., target: build}
+    profiles: ["test"]
+    entrypoint: ["go", "test", "./..."]
+volumes:
+  postgres_data:
+  ollama_data:
